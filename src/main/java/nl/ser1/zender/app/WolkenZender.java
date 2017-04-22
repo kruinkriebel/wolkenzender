@@ -47,7 +47,7 @@ public class WolkenZender {
         headPanel.add(new HeadBlockPanel("Settings", new SettingsArea()));
 
         StatusTextArea statusTextArea = new StatusTextArea(application.getImagesManager());
-        headPanel.add(new HeadBlockPanel("Status", statusTextArea));
+        headPanel.add(new HeadBlockPanel("State", statusTextArea));
         application.getStateManager().registerStateListener(statusTextArea);
 
         LogTextArea logPane = new LogTextArea();
