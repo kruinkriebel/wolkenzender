@@ -50,7 +50,7 @@ public class WolkenZender {
         headPanel.add(new HeadBlockPanel("State", statusTextArea));
         application.getStateManager().registerStateListener(statusTextArea);
 
-        LogTextArea logPane = new LogTextArea();
+        LogTextPanel logPane = new LogTextPanel();
         application.getUserLogManager().registerUserLogReceiver(logPane);
 
         mainPanel.add(logPane);

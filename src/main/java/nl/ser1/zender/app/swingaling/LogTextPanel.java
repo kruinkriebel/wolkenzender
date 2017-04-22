@@ -10,11 +10,18 @@ import java.awt.*;
 /**
  * Created by Robbert on 22-04-17.
  */
-public class LogTextArea extends JTextArea implements UserLogReceiver {
+public class LogTextPanel extends JPanel implements UserLogReceiver {
 
-    public LogTextArea() {
+    private JTextArea logArea;
+
+    public LogTextPanel() {
+        setLayout(new BorderLayout());
         setBorder(BorderFactory.createLineBorder(Settings.COLOR_BORDER, 2));
-        setEditable(false);
+        logArea = new JTextArea();
+        logArea.setEditable(false);
+
+        JScrollPane scrollPane = new JScrollPane(logArea);
+        add(scrollPane);
     }
 
     @Override
@@ -24,6 +31,6 @@ public class LogTextArea extends JTextArea implements UserLogReceiver {
 
     @Override
     public void receive(String log) {
-        append(log);
+        logArea.append(log);
     }
 }
