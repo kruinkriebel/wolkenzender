@@ -39,7 +39,7 @@ public class ImagesManager {
         return !images.isEmpty();
     }
 
-    public void newBuffer() {
+    private void newBuffer() {
         images = new ArrayList<>();
         imageEventListeners.forEach(l -> l.newImageEvent(ImageEvent.NEW_BUFFER_CREATED));
     }

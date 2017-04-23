@@ -25,6 +25,7 @@ public class FileMenu extends JMenu {
     private void addMenuItems() {
 
         add(createStatusItem());
+        addSeparator();
         add(createBufferStatusItem());
         add(createClearBufferItem());
         addSeparator();
@@ -39,7 +40,7 @@ public class FileMenu extends JMenu {
     private JMenuItem createClearBufferItem() {
         JMenuItem item = new JMenuItem("Clear buffer") {
             @Override
-            public boolean isVisible() {
+            public boolean isEnabled() {
                 return application.state() == State.STOPPED && application.getImagesManager().isBufferFilled();
             }
         };
@@ -47,7 +48,7 @@ public class FileMenu extends JMenu {
 
             @Override
             public void actionPerformed(ActionEvent e) {
-                application.getImagesManager().newBuffer();
+                application.getImagesManager().clearBuffer();
             }
         });
         return item;
@@ -80,7 +81,7 @@ public class FileMenu extends JMenu {
     private JMenuItem createMovieItem() {
         JMenuItem item = new JMenuItem("Create movie") {
             @Override
-            public boolean isVisible() {
+            public boolean isEnabled() {
                 return application.state() == State.STOPPED && application.getImagesManager().isBufferFilled();
             }
         };
@@ -98,7 +99,7 @@ public class FileMenu extends JMenu {
 
         JMenuItem item = new JMenuItem("Stop taking pictures") {
             @Override
-            public boolean isVisible() {
+            public boolean isEnabled() {
                 return application.state() == State.TAKING_PICTURES;
             }
         };
@@ -115,7 +116,7 @@ public class FileMenu extends JMenu {
     private JMenuItem createStartTakingPicturesItem() {
         JMenuItem item = new JMenuItem() {
             @Override
-            public boolean isVisible() {
+            public boolean isEnabled() {
                 return application.state() == State.STOPPED;
             }
 
@@ -139,7 +140,7 @@ public class FileMenu extends JMenu {
     private JMenuItem clearImagesBuffer() {
         JMenuItem item = new JMenuItem("Clear images buffer") {
             @Override
-            public boolean isVisible() {
+            public boolean isEnabled() {
                 return application.state() == State.STOPPED && application.getImagesManager().isBufferFilled();
             }
 
