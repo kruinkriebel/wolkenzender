@@ -15,7 +15,7 @@ public class Settings {
     public static final int LOGITECH_C920_MAX_CAPTURE_WIDTH = 1920;
     public static final int LOGITECH_C920_MAX_CAPTURE_HEIGHT = 1080;
     public static final int CAPTURE_INTERVAL_SECONDS = 20;
-    public static final boolean DELETE_CAPTURED_PICTURES_ON_EXIT = true;
+    public static final String DIRECTORY_OUTPUT_PICTURES = "output/pictures";
 
     // audio
 

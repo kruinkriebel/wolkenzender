@@ -31,6 +31,7 @@ public class WolkenZender {
     private static void initialAppState() {
         application.getStateManager().toState(State.STOPPED);
         application.getUserLogManager().sendUserLog("Welcome! Pick an action from the menu");
+        application.getImagesManager().loadBufferFromOutputDirectory();
     }
 
     private static void schwinggg() {

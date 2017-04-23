@@ -1,6 +1,8 @@
 package nl.ser1.zender.tasks;
 
 import com.github.sarxos.webcam.Webcam;
+import com.github.sarxos.webcam.WebcamDriver;
+import com.github.sarxos.webcam.WebcamDriverUtils;
 import nl.ser1.zender.app.Settings;
 import nl.ser1.zender.app.images.ImagesManager;
 import nl.ser1.zender.app.userlog.UserLogManager;
@@ -27,27 +29,29 @@ public class TakePictureTask implements Runnable {
     private UserLogManager userLogManager;
 
     public TakePictureTask(UserLogManager userLogManager, ImagesManager imagesManager) {
-        this.userLogManager=userLogManager;
-        this.imagesManager=imagesManager;
+        this.userLogManager = userLogManager;
+        this.imagesManager = imagesManager;
 
         fetchWebcam(userLogManager);
 
         setWhopperResolution();
+
     }
 
     private void setWhopperResolution() {
-        Dimension[] nonStandardResolutions = new Dimension[] {
+        Dimension[] nonStandardResolutions = new Dimension[]{
                 DIMENSION_LOGITECH_C920_MAX
         };
 
         webcam.setCustomViewSizes(nonStandardResolutions);
         webcam.setViewSize(DIMENSION_LOGITECH_C920_MAX.getSize());
+
     }
 
     private void fetchWebcam(UserLogManager userLogManager) {
         Webcam.getWebcams().forEach(w -> userLogManager.sendUserLog("Available camera's: " + w.getName()));
-        webcam = Webcam.getDefault();
-        userLogManager.sendUserLog("Using default webcam: " + webcam.getName());
+        webcam = Webcam.getWebcams().stream().filter(w -> w.getName().contains("C920")).findFirst().orElse(Webcam.getDefault());
+        userLogManager.sendUserLog("Using webcam: " + webcam.getName());
     }
 
     @Override
@@ -56,10 +60,12 @@ public class TakePictureTask implements Runnable {
         //TODO opening and closing webcam can be too much overhead (for short intervals)
 
         webcam.open();
+        // give some time for autofocus..?
+        sleep(2000);
 
         try {
-            String fileName = createFilename();
-            File file = createFile(fileName);
+
+            File file = imagesManager.createFile(FORMAT_EXTENSION);
 
             ImageIO.write(webcam.getImage(), FORMAT_EXTENSION, file);
             imagesManager.add(file.getCanonicalPath());
@@ -76,15 +82,13 @@ public class TakePictureTask implements Runnable {
 
     }
 
-    private File createFile(String fileName) {
-        File file = new File(fileName);
-        if (Settings.DELETE_CAPTURED_PICTURES_ON_EXIT) {
-            file.deleteOnExit();
+    private void sleep(long millis) {
+        try {
+            Thread.sleep(2000);
+        } catch (InterruptedException e) {
+            LOGGER.error("Sleep interrupted", e);
         }
-        return file;
     }
 
-    private String createFilename() {
-        return String.format("output/pictures/wolk-%s."+FORMAT_EXTENSION.toLowerCase(), LocalDateTime.now());
-    }
+
 }

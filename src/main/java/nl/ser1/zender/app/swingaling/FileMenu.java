@@ -6,6 +6,7 @@ import nl.ser1.zender.app.state.State;
 import javax.swing.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.io.IOException;
 
 /**
  * Created by Robbert on 22-04-17.
@@ -112,10 +113,15 @@ public class FileMenu extends JMenu {
     }
 
     private JMenuItem createStartTakingPicturesItem() {
-        JMenuItem item = new JMenuItem("Start taking pictures") {
+        JMenuItem item = new JMenuItem() {
             @Override
             public boolean isVisible() {
-                return application.state() == State.STOPPED && !application.getImagesManager().isBufferFilled();
+                return application.state() == State.STOPPED;
+            }
+
+            @Override
+            public String getText() {
+                return (application.getImagesManager().isBufferFilled() ? "Continue" : "Start") + " taking pictures";
             }
         };
         item.addActionListener(new ActionListener() {
@@ -126,6 +132,23 @@ public class FileMenu extends JMenu {
             }
 
 
+        });
+        return item;
+    }
+
+    private JMenuItem clearImagesBuffer() {
+        JMenuItem item = new JMenuItem("Clear images buffer") {
+            @Override
+            public boolean isVisible() {
+                return application.state() == State.STOPPED && application.getImagesManager().isBufferFilled();
+            }
+
+        };
+        item.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                application.getImagesManager().clearBuffer();
+            }
         });
         return item;
     }
