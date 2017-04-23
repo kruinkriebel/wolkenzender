@@ -40,7 +40,7 @@ public class Application {
     public void startCreateMovieTask() {
         stateManager.toState(State.CREATING_MOVIE);
         // TODO this is now just running in the same thread, no Runnable needed
-        new CreateMovieTask(new Vector<>(imagesManager.getImages()), CAPTURE_WIDTH, CAPTURE_HEIGHT).run();
+        new CreateMovieTask(new Vector<>(imagesManager.getImages()), LOGITECH_C920_MAX_CAPTURE_WIDTH, LOGITECH_C920_MAX_CAPTURE_HEIGHT).run();
         stateManager.toState(State.STOPPED);
     }
 
@@ -56,7 +56,7 @@ public class Application {
         LOGGER.info("Start takePictureSchedule...");
 
         takePictureSchedule = scheduler.scheduleAtFixedRate(
-                new TakePictureTask(CAPTURE_WIDTH, CAPTURE_HEIGHT, userLogManager, imagesManager),
+                new TakePictureTask(userLogManager, imagesManager),
                 0,
                 CAPTURE_INTERVAL_SECONDS,
                 TimeUnit.SECONDS);

@@ -11,6 +11,6 @@ public class SettingsArea extends HeadBlockTextArea {
         append("- Delete images on exit: " + Settings.DELETE_CAPTURED_PICTURES_ON_EXIT+"\n");
         append("- Capture interval: " + Settings.CAPTURE_INTERVAL_SECONDS + " seconds" +
                 "\n");
-        append("- Capture size: " + Settings.CAPTURE_WIDTH + " x " + Settings.CAPTURE_HEIGHT+"\n");
+        append("- Capture size: " + Settings.LOGITECH_C920_MAX_CAPTURE_WIDTH + " x " + Settings.LOGITECH_C920_MAX_CAPTURE_HEIGHT +"\n");
     }
 }

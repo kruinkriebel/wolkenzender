@@ -1,7 +1,6 @@
 package nl.ser1.zender.tasks;
 
 import com.github.sarxos.webcam.Webcam;
-import nl.ser1.zender.app.Application;
 import nl.ser1.zender.app.Settings;
 import nl.ser1.zender.app.images.ImagesManager;
 import nl.ser1.zender.app.userlog.UserLogManager;
@@ -13,7 +12,6 @@ import java.awt.*;
 import java.io.File;
 import java.io.IOException;
 import java.time.LocalDateTime;
-import java.util.List;
 
 /**
  * Created by Robbert on 19-04-17.
@@ -21,19 +19,35 @@ import java.util.List;
 public class TakePictureTask implements Runnable {
 
     public static final Logger LOGGER = LoggerFactory.getLogger(TakePictureTask.class);
-    public static final String FORMAT_EXTENSION = "JPEG";
+    public static final Dimension DIMENSION_LOGITECH_C920_MAX = new Dimension(Settings.LOGITECH_C920_MAX_CAPTURE_WIDTH, Settings.LOGITECH_C920_MAX_CAPTURE_HEIGHT);
 
+    public static final String FORMAT_EXTENSION = "JPEG";
     private Webcam webcam;
     private ImagesManager imagesManager;
     private UserLogManager userLogManager;
 
-    public TakePictureTask(int width, int height, UserLogManager userLogManager, ImagesManager imagesManager) {
+    public TakePictureTask(UserLogManager userLogManager, ImagesManager imagesManager) {
         this.userLogManager=userLogManager;
         this.imagesManager=imagesManager;
 
+        fetchWebcam(userLogManager);
+
+        setWhopperResolution();
+    }
+
+    private void setWhopperResolution() {
+        Dimension[] nonStandardResolutions = new Dimension[] {
+                DIMENSION_LOGITECH_C920_MAX
+        };
+
+        webcam.setCustomViewSizes(nonStandardResolutions);
+        webcam.setViewSize(DIMENSION_LOGITECH_C920_MAX.getSize());
+    }
+
+    private void fetchWebcam(UserLogManager userLogManager) {
+        Webcam.getWebcams().forEach(w -> userLogManager.sendUserLog("Available camera's: " + w.getName()));
         webcam = Webcam.getDefault();
-        LOGGER.info("Default webcam found: " + webcam.getName());
-        webcam.setViewSize(new Dimension(width, height));
+        userLogManager.sendUserLog("Using default webcam: " + webcam.getName());
     }
 
     @Override

@@ -1,24 +1,23 @@
 package nl.ser1.zender.scooped.moviemaker;
 
 /**
- *
  * Adapted version:
  * - Added NPE fix
  * - SLF4J logging
  * - Removed main / command line methods
- *
+ * <p>
  * Original Javadoc:
  *
- * @(#)JpegImagesToMovie.java	1.3 01/03/13
- *
+ * @(#)JpegImagesToMovie.java 1.3 01/03/13
+ * <p>
  * Copyright (c) 1999-2001 Sun Microsystems, Inc. All Rights Reserved.
- *
+ * <p>
  * Sun grants you ("Licensee") a non-exclusive, royalty free, license to use,
  * modify and redistribute this software in source and binary code form,
  * provided that i) this copyright notice and license appear on all copies of
  * the software; and ii) Licensee does not utilize the software in a manner
  * which is disparaging to Sun.
- *
+ * <p>
  * This software is provided "AS IS," without a warranty of any kind. ALL
  * EXPRESS OR IMPLIED CONDITIONS, REPRESENTATIONS AND WARRANTIES, INCLUDING ANY
  * IMPLIED WARRANTY OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE OR
@@ -30,7 +29,7 @@ package nl.ser1.zender.scooped.moviemaker;
  * CAUSED AND REGARDLESS OF THE THEORY OF LIABILITY, ARISING OUT OF THE USE OF
  * OR INABILITY TO USE SOFTWARE, EVEN IF SUN HAS BEEN ADVISED OF THE
  * POSSIBILITY OF SUCH DAMAGES.
- *
+ * <p>
  * This software is not designed or intended for use in on-line control of
  * aircraft, air traffic, aircraft navigation or aircraft communications; or in
  * the design, construction, operation or maintenance of any nuclear
@@ -41,17 +40,25 @@ package nl.ser1.zender.scooped.moviemaker;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.*;
+import javax.imageio.ImageIO;
+import javax.media.*;
+import javax.media.control.TrackControl;
+import javax.media.datasink.DataSinkErrorEvent;
+import javax.media.datasink.DataSinkEvent;
+import javax.media.datasink.DataSinkListener;
+import javax.media.datasink.EndOfStreamEvent;
+import javax.media.format.RGBFormat;
+import javax.media.format.VideoFormat;
+import javax.media.protocol.*;
+import java.awt.*;
+import java.awt.image.BufferedImage;
+import java.io.File;
+import java.io.IOException;
+import java.io.RandomAccessFile;
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.util.*;
-import java.awt.Dimension;
-
-import javax.media.*;
-import javax.media.control.*;
-import javax.media.protocol.*;
-import javax.media.datasink.*;
-import javax.media.format.VideoFormat;
+import java.util.Arrays;
+import java.util.Vector;
 
 
 /**
@@ -73,17 +80,14 @@ public class JpegImagesToMovie implements ControllerListener, DataSinkListener {
 
     }
 
-    public boolean doIt(int width, int height, int frameRate, Vector inFiles, MediaLocator outML)
-    {
+    public boolean doIt(int width, int height, int frameRate, Vector inFiles, MediaLocator outML) {
         ImageDataSource ids = new ImageDataSource(width, height, frameRate, inFiles);
 
         Processor p;
 
-        try
-        {
+        try {
             p = Manager.createProcessor(ids);
-        } catch (Exception e)
-        {
+        } catch (Exception e) {
             return false;
         }
 
@@ -102,29 +106,31 @@ public class JpegImagesToMovie implements ControllerListener, DataSinkListener {
 
         // Query for the processor for supported formats.
         // Then set it on the processor.
-        TrackControl tcs[] = p.getTrackControls();
-        Format f[] = tcs[0].getSupportedFormats();
-        if (f == null || f.length <= 0)
-        {
-            LOGGER.error("The mux does not support the input format: " + tcs[0].getFormat());
+        TrackControl[] trackControls = p.getTrackControls();
+
+        Arrays.asList(trackControls).forEach(tc -> LOGGER.info("Track control: " + tc));
+
+        Format[] supportedFormats = trackControls[0].getSupportedFormats();
+        if (supportedFormats == null || supportedFormats.length <= 0) {
+            LOGGER.error("The mux does not support the input format: " + trackControls[0].getFormat());
             return false;
         }
 
-        tcs[0].setFormat(f[0]);
+        Arrays.asList(supportedFormats).forEach(sf -> LOGGER.info("Supported format: " + sf.getEncoding()));
+
+        trackControls[0].setFormat(supportedFormats[0]);
 
         // We are done with programming the processor.  Let's just
         // realize it.
         p.realize();
-        if (!waitForState(p, Processor.Realized))
-        {
+        if (!waitForState(p, Processor.Realized)) {
             LOGGER.error("Failed to realize the processor.");
             return false;
         }
 
         // Now, we'll need to create a DataSink.
         DataSink dsink;
-        if ((dsink = createDataSink(p, outML)) == null)
-        {
+        if ((dsink = createDataSink(p, outML)) == null) {
             LOGGER.error("Failed to create a DataSink for the given output MediaLocator: " + outML);
             return false;
         }
@@ -133,13 +139,10 @@ public class JpegImagesToMovie implements ControllerListener, DataSinkListener {
         fileDone = false;
 
         // OK, we can now start the actual transcoding.
-        try
-        {
+        try {
             p.start();
             dsink.start();
-        }
-        catch (IOException e)
-        {
+        } catch (IOException e) {
             LOGGER.error("IO error during processing", e);
             return false;
         }
@@ -148,12 +151,9 @@ public class JpegImagesToMovie implements ControllerListener, DataSinkListener {
         waitForFileDone();
 
         // Cleanup.
-        try
-        {
+        try {
             dsink.close();
-        }
-        catch (Exception e)
-        {
+        } catch (Exception e) {
             LOGGER.error("While closing datasink", e);
         }
 
@@ -165,25 +165,20 @@ public class JpegImagesToMovie implements ControllerListener, DataSinkListener {
     /**
      * Create the DataSink.
      */
-    DataSink createDataSink(Processor p, MediaLocator outML)
-    {
+    DataSink createDataSink(Processor p, MediaLocator outML) {
         DataSource ds;
 
-        if ((ds = p.getDataOutput()) == null)
-        {
+        if ((ds = p.getDataOutput()) == null) {
             LOGGER.error("Something is really wrong: the processor does not have an output DataSource (null)");
             return null;
         }
 
         DataSink dsink;
 
-        try
-        {
+        try {
             dsink = Manager.createDataSink(ds, outML);
             dsink.open();
-        }
-        catch (Exception e)
-        {
+        } catch (Exception e) {
             LOGGER.error("Cannot create the DataSink", e);
             return null;
         }
@@ -195,17 +190,12 @@ public class JpegImagesToMovie implements ControllerListener, DataSinkListener {
      * Block until the processor has transitioned to the given state.
      * Return false if the transition failed.
      */
-    boolean waitForState(Processor p, int state)
-    {
-        synchronized (waitSync)
-        {
-            try
-            {
+    boolean waitForState(Processor p, int state) {
+        synchronized (waitSync) {
+            try {
                 while (p.getState() < state && stateTransitionOK)
                     waitSync.wait();
-            }
-            catch (Exception e)
-            {
+            } catch (Exception e) {
 
             }
         }
@@ -215,27 +205,21 @@ public class JpegImagesToMovie implements ControllerListener, DataSinkListener {
     /**
      * Controller Listener.
      */
-    public void controllerUpdate(ControllerEvent evt)
-    {
+    public void controllerUpdate(ControllerEvent evt) {
         if (evt instanceof ConfigureCompleteEvent ||
                 evt instanceof RealizeCompleteEvent ||
-                evt instanceof PrefetchCompleteEvent)
-        {
+                evt instanceof PrefetchCompleteEvent) {
             synchronized (waitSync) {
                 stateTransitionOK = true;
                 waitSync.notifyAll();
             }
-        } else if (evt instanceof ResourceUnavailableEvent)
-        {
+        } else if (evt instanceof ResourceUnavailableEvent) {
             synchronized (waitSync) {
                 stateTransitionOK = false;
                 waitSync.notifyAll();
             }
-        }
-        else if (evt instanceof EndOfMediaEvent)
-        {
-            if(evt.getSourceController() != null)
-            {
+        } else if (evt instanceof EndOfMediaEvent) {
+            if (evt.getSourceController() != null) {
                 evt.getSourceController().stop();
                 evt.getSourceController().close();
             }
@@ -245,17 +229,12 @@ public class JpegImagesToMovie implements ControllerListener, DataSinkListener {
     /**
      * Block until file writing is done.
      */
-    boolean waitForFileDone()
-    {
-        synchronized (waitFileSync)
-        {
-            try
-            {
+    boolean waitForFileDone() {
+        synchronized (waitFileSync) {
+            try {
                 while (!fileDone)
                     waitFileSync.wait();
-            }
-            catch (Exception e)
-            {
+            } catch (Exception e) {
 
             }
         }
@@ -265,16 +244,14 @@ public class JpegImagesToMovie implements ControllerListener, DataSinkListener {
     /**
      * Event handler for the file writer.
      */
-    public void dataSinkUpdate(DataSinkEvent evt)
-    {
+    public void dataSinkUpdate(DataSinkEvent evt) {
 
         if (evt instanceof EndOfStreamEvent) {
             synchronized (waitFileSync) {
                 fileDone = true;
                 waitFileSync.notifyAll();
             }
-        } else if (evt instanceof DataSinkErrorEvent)
-        {
+        } else if (evt instanceof DataSinkErrorEvent) {
             synchronized (waitFileSync) {
                 fileDone = true;
                 fileSuccess = false;
@@ -288,56 +265,46 @@ public class JpegImagesToMovie implements ControllerListener, DataSinkListener {
      * turn that into a stream of JMF buffers.
      * The DataSource is not seekable or positionable.
      */
-    class ImageDataSource extends PullBufferDataSource
-    {
+    class ImageDataSource extends PullBufferDataSource {
 
         ImageSourceStream streams[];
 
-        ImageDataSource(int width, int height, int frameRate, Vector images)
-        {
+        ImageDataSource(int width, int height, int frameRate, Vector images) {
             streams = new ImageSourceStream[1];
-            streams[0] = new ImageSourceStream(width, height, frameRate, images);
+            streams[0] = new PngImageSourceStream(width, height, frameRate, images);
         }
 
-        public MediaLocator getLocator()
-        {
+        public MediaLocator getLocator() {
             return null;
         }
 
-        public void setLocator(MediaLocator source)
-        {
+        public void setLocator(MediaLocator source) {
         }
 
         /**
          * Content type is of RAW since we are sending buffers of video
          * frames without a container format.
          */
-        public String getContentType()
-        {
+        public String getContentType() {
             return ContentDescriptor.RAW;
         }
 
-        public void connect()
-        {
+        public void connect() {
         }
 
-        public void disconnect()
-        {
+        public void disconnect() {
         }
 
-        public void start()
-        {
+        public void start() {
         }
 
-        public void stop()
-        {
+        public void stop() {
         }
 
         /**
          * Return the ImageSourceStreams.
          */
-        public PullBufferStream[] getStreams()
-        {
+        public PullBufferStream[] getStreams() {
             return streams;
         }
 
@@ -346,38 +313,32 @@ public class JpegImagesToMovie implements ControllerListener, DataSinkListener {
          * frames and frame rate.  But for the purpose of this program,
          * it's not necessary.
          */
-        public Time getDuration()
-        {
+        public Time getDuration() {
             return DURATION_UNKNOWN;
         }
 
-        public Object[] getControls()
-        {
+        public Object[] getControls() {
             return new Object[0];
         }
 
-        public Object getControl(String type)
-        {
+        public Object getControl(String type) {
             return null;
         }
     }
 
 
-
     /**
      * The source stream to go along with ImageDataSource.
      */
-    class ImageSourceStream implements PullBufferStream
-    {
+    class ImageSourceStream implements PullBufferStream {
         Vector images;
         int width, height;
         VideoFormat format;
 
-        int nextImage = 0;	// index of the next image to be read.
+        int nextImage = 0;    // index of the next image to be read.
         boolean ended = false;
 
-        public ImageSourceStream(int width, int height, int frameRate, Vector images)
-        {
+        public ImageSourceStream(int width, int height, int frameRate, Vector images) {
             this.width = width;
             this.height = height;
             this.images = images;
@@ -386,14 +347,13 @@ public class JpegImagesToMovie implements ControllerListener, DataSinkListener {
                     new Dimension(width, height),
                     Format.NOT_SPECIFIED,
                     Format.byteArray,
-                    (float)frameRate);
+                    (float) frameRate);
         }
 
         /**
          * We should never need to block assuming data are read from files.
          */
-        public boolean willReadBlock()
-        {
+        public boolean willReadBlock() {
             return false;
         }
 
@@ -401,8 +361,7 @@ public class JpegImagesToMovie implements ControllerListener, DataSinkListener {
          * This is called from the Processor to read a frame worth
          * of video data.
          */
-        public void read(Buffer buf) throws IOException
-        {
+        public void read(Buffer buf) throws IOException {
 
             // Check if we've finished all the frames.
             if (nextImage >= images.size()) {
@@ -414,7 +373,7 @@ public class JpegImagesToMovie implements ControllerListener, DataSinkListener {
                 return;
             }
 
-            String imageFile = (String)images.elementAt(nextImage);
+            String imageFile = (String) images.elementAt(nextImage);
             nextImage++;
 
             // Open a random access file for the next image.
@@ -426,19 +385,19 @@ public class JpegImagesToMovie implements ControllerListener, DataSinkListener {
             // Check the input buffer type & size.
 
             if (buf.getData() instanceof byte[])
-                data = (byte[])buf.getData();
+                data = (byte[]) buf.getData();
 
             // Check to see the given buffer is big enough for the frame.
             if (data == null || data.length < raFile.length()) {
-                data = new byte[(int)raFile.length()];
+                data = new byte[(int) raFile.length()];
                 buf.setData(data);
             }
 
             // Read the entire JPEG image from the file.
-            raFile.readFully(data, 0, (int)raFile.length());
+            raFile.readFully(data, 0, (int) raFile.length());
 
             buf.setOffset(0);
-            buf.setLength((int)raFile.length());
+            buf.setLength((int) raFile.length());
             buf.setFormat(format);
             buf.setFlags(buf.getFlags() | Buffer.FLAG_KEY_FRAME);
 
@@ -449,34 +408,110 @@ public class JpegImagesToMovie implements ControllerListener, DataSinkListener {
         /**
          * Return the format of each video frame.  That will be JPEG.
          */
-        public Format getFormat()
-        {
+        public Format getFormat() {
             return format;
         }
 
-        public ContentDescriptor getContentDescriptor()
-        {
+        public ContentDescriptor getContentDescriptor() {
             return new ContentDescriptor(ContentDescriptor.RAW);
         }
 
-        public long getContentLength()
-        {
+        public long getContentLength() {
             return 0;
         }
 
-        public boolean endOfStream()
-        {
+        public boolean endOfStream() {
             return ended;
         }
 
-        public Object[] getControls()
-        {
+        public Object[] getControls() {
             return new Object[0];
         }
 
-        public Object getControl(String type)
-        {
+        public Object getControl(String type) {
             return null;
         }
+    }
+
+    class PngImageSourceStream extends ImageSourceStream {
+
+        public PngImageSourceStream(int width, int height, int frameRate,
+                                    Vector<String> images) {
+            super(width, height, frameRate, images);
+
+            // configure the new format as RGB format
+            format = new RGBFormat(new Dimension(width, height),
+                    Format.NOT_SPECIFIED, Format.byteArray, frameRate,
+                    24, // 24 bits per pixel
+                    1, 2, 3); // red, green and blue masks when data are in the form of byte[]
+        }
+
+        public void read(Buffer buf) throws IOException {
+
+            // Check if we've finished all the frames.
+            if (nextImage >= images.size()) {
+                // We are done. Set EndOfMedia.
+                LOGGER.info("Done reading all images.");
+                buf.setEOM(true);
+                buf.setOffset(0);
+                buf.setLength(0);
+                ended = true;
+                return;
+            }
+
+            String imageFile = (String) images.elementAt(nextImage);
+            nextImage++;
+
+            LOGGER.error("  - reading image file: " + imageFile);
+
+            // read the PNG image
+            BufferedImage image = ImageIO.read(new File(imageFile));
+            boolean hasAlpha = image.getColorModel().hasAlpha();
+            Dimension size = format.getSize();
+
+            // convert 32-bit RGBA to 24-bit RGB
+            byte[] imageData = convertTo24Bit(hasAlpha, image.getRaster().getPixels(0, 0, size.width, size.height, (int[]) null));
+            buf.setData(imageData);
+
+            LOGGER.error("    read " + imageData.length + " bytes.");
+
+            buf.setOffset(0);
+            buf.setLength(imageData.length);
+            buf.setFormat(format);
+            buf.setFlags(buf.getFlags() | Buffer.FLAG_KEY_FRAME);
+        }
+
+        private void convertIntByteToByte(int[] src, int srcIndex, byte[] out, int outIndex) {
+            // Note: the int[] returned by bufferedImage.getRaster().getPixels()
+            // is an int[]
+            // where each int is the value for one color i.e. the first 4 ints
+            // contain the RGBA values for the first pixel
+            int r = src[srcIndex];
+            int g = src[srcIndex + 1];
+            int b = src[srcIndex + 2];
+
+            out[outIndex] = (byte) (r & 0xFF);
+            out[outIndex + 1] = (byte) (g & 0xFF);
+            out[outIndex + 2] = (byte) (b & 0xFF);
+        }
+
+        private byte[] convertTo24Bit(boolean hasAlpha, int[] input) {
+            int dataLength = input.length;
+            int newSize = (hasAlpha ? dataLength * 3 / 4 : dataLength);
+            byte[] convertedData = new byte[newSize];
+
+            // for every 4 int values of the original array (RGBA) write 3
+            // bytes (RGB) to the output array
+            // if there is no alpha (i.e. RGB image) then just convert int to byte
+            for (int i = 0, j = 0; i < dataLength; i += 3, j += 3) {
+                convertIntByteToByte(input, i, convertedData, j);
+                if (hasAlpha) {
+                    i++; // skip an extra byte if the original image has an
+                    // extra int for transparency
+                }
+            }
+            return convertedData;
+        }
+
     }
 }
