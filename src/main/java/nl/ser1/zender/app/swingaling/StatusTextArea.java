@@ -13,7 +13,8 @@ import java.awt.*;
  */
 public class StatusTextArea extends HeadBlockTextArea implements StateListener, ImageEventListener {
 
-    private String state, images;
+    private State latestState;
+    private String images;
     private ImagesManager imagesManager;
 
     public StatusTextArea(ImagesManager imagesManager) {
@@ -25,14 +26,18 @@ public class StatusTextArea extends HeadBlockTextArea implements StateListener, 
 
     @Override
     public void stateChange(State state) {
-        this.state = state.name();
+        this.latestState = state;
         renderText();
     }
 
     private void renderText() {
-        setText(state + "\n" + "Images in buffer: " + imagesManager.size());
+        setText(latestState.name() + "\n" + "Images in buffer: " + imagesManager.size());
     }
 
+    @Override
+    public Color getBackground() {
+        return latestState == State.TAKING_PICTURES ? new Color(50,200,50) : super.getBackground();
+    }
 
     @Override
     public void newImageEvent(ImageEvent imageEvent) {

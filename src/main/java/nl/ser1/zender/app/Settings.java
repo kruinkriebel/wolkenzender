@@ -12,6 +12,8 @@ public class Settings {
     // visuals
     public static final Color COLOR_BORDER = new Color(50, 150, 255);
     public static final Color COLOR_HEAD_PANEL = new Color(100, 200, 255);
+    public static final Color COLOR_HEAD_BLOCK = new Color(75, 175, 255);
+    public static final Color COLOR_LOG_AREA = new Color(0, 125, 200);
 
     // schedule
     // TODO NTF would be nice to auto-link to sunrise/fall

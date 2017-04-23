@@ -3,6 +3,7 @@ package nl.ser1.zender.app.swingaling;
 import nl.ser1.zender.app.Settings;
 import nl.ser1.zender.app.WolkenZender;
 import nl.ser1.zender.app.userlog.UserLogReceiver;
+import org.apache.commons.lang3.StringUtils;
 
 import javax.swing.*;
 import java.awt.*;
@@ -18,6 +19,8 @@ public class LogTextPanel extends JPanel implements UserLogReceiver {
         setLayout(new BorderLayout());
         setBorder(BorderFactory.createLineBorder(Settings.COLOR_BORDER, 2));
         logArea = new JTextArea();
+        logArea.setBackground(Settings.COLOR_LOG_AREA);
+        logArea.setFont(new Font(Font.MONOSPACED, Font.PLAIN, getFont().getSize()));
         logArea.setEditable(false);
 
         JScrollPane scrollPane = new JScrollPane(logArea);
@@ -31,6 +34,11 @@ public class LogTextPanel extends JPanel implements UserLogReceiver {
 
     @Override
     public void receive(String log) {
-        logArea.append(log);
+        int lineCount = logArea.getLineCount();
+        if (lineCount >= 1000) {
+            logArea.setText("<screen logging reset>");
+        }
+        logArea.append(StringUtils.rightPad(lineCount+"",3) + " " + log);
     }
+
 }

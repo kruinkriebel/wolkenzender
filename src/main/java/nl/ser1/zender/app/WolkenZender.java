@@ -10,7 +10,7 @@ import java.awt.*;
 
 public class WolkenZender {
 
-    public static final int APPLICATION_WIDTH = 800;
+    public static final int APPLICATION_WIDTH = 1000;
     private static final Logger LOGGER = LoggerFactory.getLogger(WolkenZender.class);
 
     private static Application application = new Application();
