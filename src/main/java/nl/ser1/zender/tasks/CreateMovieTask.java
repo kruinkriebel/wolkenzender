@@ -1,5 +1,6 @@
 package nl.ser1.zender.tasks;
 
+import nl.ser1.zender.app.Settings;
 import nl.ser1.zender.scooped.moviemaker.JpegImagesToMovie;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -51,6 +52,6 @@ public class CreateMovieTask implements Runnable {
     }
 
     private String createFilename() {
-        return String.format("output/movie/wolk-%s.mov", LocalDateTime.now());
+        return String.format(Settings.DIRECTORY_OUTPUT_MOVIES + "/wolk-%s.mov", LocalDateTime.now());
     }
 }

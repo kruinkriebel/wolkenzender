@@ -1,8 +1,6 @@
 package nl.ser1.zender.tasks;
 
 import com.github.sarxos.webcam.Webcam;
-import com.github.sarxos.webcam.WebcamDriver;
-import com.github.sarxos.webcam.WebcamDriverUtils;
 import nl.ser1.zender.app.Settings;
 import nl.ser1.zender.app.images.ImagesManager;
 import nl.ser1.zender.app.userlog.UserLogManager;
@@ -13,7 +11,10 @@ import javax.imageio.ImageIO;
 import java.awt.*;
 import java.io.File;
 import java.io.IOException;
-import java.time.LocalDateTime;
+import java.time.LocalTime;
+
+import static nl.ser1.zender.app.Settings.CAMERA_IDENTIFIER;
+import static nl.ser1.zender.app.Settings.CAPTURE_FORMAT_EXTENSION;
 
 /**
  * Created by Robbert on 19-04-17.
@@ -23,7 +24,6 @@ public class TakePictureTask implements Runnable {
     public static final Logger LOGGER = LoggerFactory.getLogger(TakePictureTask.class);
     public static final Dimension DIMENSION_LOGITECH_C920_MAX = new Dimension(Settings.LOGITECH_C920_MAX_CAPTURE_WIDTH, Settings.LOGITECH_C920_MAX_CAPTURE_HEIGHT);
 
-    public static final String FORMAT_EXTENSION = "JPEG";
     private Webcam webcam;
     private ImagesManager imagesManager;
     private UserLogManager userLogManager;
@@ -32,7 +32,7 @@ public class TakePictureTask implements Runnable {
         this.userLogManager = userLogManager;
         this.imagesManager = imagesManager;
 
-        fetchWebcam(userLogManager);
+        fetchWebcam();
 
         setWhopperResolution();
 
@@ -48,47 +48,46 @@ public class TakePictureTask implements Runnable {
 
     }
 
-    private void fetchWebcam(UserLogManager userLogManager) {
-        Webcam.getWebcams().forEach(w -> userLogManager.sendUserLog("Available camera's: " + w.getName()));
-        webcam = Webcam.getWebcams().stream().filter(w -> w.getName().contains("C920")).findFirst().orElse(Webcam.getDefault());
+    private void fetchWebcam() {
+        Webcam.getWebcams().forEach(w -> userLogManager.sendUserLog("Camera found: " + w.getName()));
+        webcam = Webcam.getWebcams().stream().filter(w -> w.getName().contains(CAMERA_IDENTIFIER)).findFirst().orElse(Webcam.getDefault());
         userLogManager.sendUserLog("Using webcam: " + webcam.getName());
     }
 
     @Override
     public void run() {
 
-        //TODO opening and closing webcam can be too much overhead (for short intervals)
+        if (withinTimeWindow()) {
+            //TODO opening and closing webcam can be too much overhead? (for short intervals)
+            webcam.open();
+            takeAndSavePicture();
+            webcam.close();
+        } else {
+            userLogManager.sendUserLog("Not taking picture; we're not within time window");
+        }
 
-        webcam.open();
-        // give some time for autofocus..?
-        sleep(2000);
+    }
 
+    private boolean withinTimeWindow() {
+        LocalTime now = LocalTime.now();
+        return now.isAfter(Settings.CAPTURE_WINDOW_START_TIME) && now.isBefore(Settings.CAPTURE_WINDOW_END_TIME);
+    }
+
+    private void takeAndSavePicture() {
         try {
 
-            File file = imagesManager.createFile(FORMAT_EXTENSION);
+            File file = imagesManager.createFile(CAPTURE_FORMAT_EXTENSION);
 
-            ImageIO.write(webcam.getImage(), FORMAT_EXTENSION, file);
+            ImageIO.write(webcam.getImage(), CAPTURE_FORMAT_EXTENSION, file);
             imagesManager.add(file.getCanonicalPath());
 
             String log = "Webcam image taken. Written at: " + file.getCanonicalPath();
             LOGGER.info(log);
-            userLogManager.sendUserLog("Webcam image taken: " + file.getName());
+            userLogManager.sendUserLog("Webcam image taken and saved: " + file.getName());
 
         } catch (IOException e) {
             LOGGER.error("Woopsydaisy.", e);
         }
-
-        webcam.close();
-
     }
-
-    private void sleep(long millis) {
-        try {
-            Thread.sleep(2000);
-        } catch (InterruptedException e) {
-            LOGGER.error("Sleep interrupted", e);
-        }
-    }
-
 
 }

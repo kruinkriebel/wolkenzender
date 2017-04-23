@@ -23,10 +23,10 @@ public class UserLogManager {
     }
 
     public void sendUserLog(String userLog) {
-        LOGGER.info("User log: " + userLog);
+        LOGGER.info("Logging to user: " + userLog);
         userLogReceivers.forEach(ulr -> {
             String completeUserLog = createUserLogTimestamp() + " " + userLog + "\n";
-            ulr.receive(userLog);
+            ulr.receive(completeUserLog);
         });
     }
 
