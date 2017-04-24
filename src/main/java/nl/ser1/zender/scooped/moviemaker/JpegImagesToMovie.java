@@ -37,6 +37,7 @@ package nl.ser1.zender.scooped.moviemaker;
  * redistribute the Software for such purposes.
  */
 
+import nl.ser1.zender.app.Settings;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -271,7 +272,14 @@ public class JpegImagesToMovie implements ControllerListener, DataSinkListener {
 
         ImageDataSource(int width, int height, int frameRate, Vector images) {
             streams = new ImageSourceStream[1];
-            streams[0] = new ImageSourceStream(width, height, frameRate, images);
+            if (Settings.CAPTURE_FORMAT_EXTENSION.equalsIgnoreCase("PNG")) {
+                LOGGER.info("Using PngImageSourceStream!");
+                streams[0] = new PngImageSourceStream(width, height, frameRate, images);
+            } else {
+                //JPG
+                LOGGER.info("Using (default) ImageSourceStream");
+                streams[0] = new ImageSourceStream(width, height, frameRate, images);
+            }
         }
 
         public MediaLocator getLocator() {

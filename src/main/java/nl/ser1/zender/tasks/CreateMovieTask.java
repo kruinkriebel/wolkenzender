@@ -1,6 +1,9 @@
 package nl.ser1.zender.tasks;
 
+import nl.ser1.zender.app.managers.Managers;
 import nl.ser1.zender.app.Settings;
+import nl.ser1.zender.app.state.Action;
+import nl.ser1.zender.app.state.State;
 import nl.ser1.zender.scooped.moviemaker.JpegImagesToMovie;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -17,37 +20,32 @@ public class CreateMovieTask implements Runnable {
 
     public static final Logger LOGGER = LoggerFactory.getLogger(CreateMovieTask.class);
 
-    private Vector<String> images;
-    private String fileName;
-    private int screenWidth, screenHeight;
-
-    public CreateMovieTask(Vector<String> images, int screenWidth, int screenHeight) {
-        this.images = images;
-        this.fileName = createFilename();
-        this.screenWidth = screenWidth;
-        this.screenHeight = screenHeight;
+    public CreateMovieTask() {
     }
 
     @Override
     public void run() {
 
-        LOGGER.info("Starting movie creation");
-
-        JpegImagesToMovie imageToMovie = new JpegImagesToMovie();
-        MediaLocator oml;
+        Managers.userLogManager.sendUserLog("Starting movie creation");
+        String filename = createFilename();
 
         try {
-            if ((oml = imageToMovie.createMediaLocator(fileName)) == null) {
-                LOGGER.error("Cannot build media locator from: " + fileName);
-            }
-            int interval = 50;
 
-            imageToMovie.doIt(screenWidth, screenHeight, (1000 / interval), images, oml);
+
+            JpegImagesToMovie imageToMovie = new JpegImagesToMovie();
+            MediaLocator oml;
+            if ((oml = imageToMovie.createMediaLocator(filename)) == null) {
+                LOGGER.error("Cannot build media locator from: " + filename);
+            }
+            imageToMovie.doIt(Settings.CAPTURE_RESOLUTION.width, Settings.CAPTURE_RESOLUTION.height, 30, new Vector(Managers.imagesManager.getImages()), oml);
+
         } catch (MalformedURLException e) {
             LOGGER.error("URL shit", e);
+        } finally {
+            Managers.stateManager.performAction(Action.STOP_CREATING_MOVIE);
         }
 
-        LOGGER.info("Movie created at " + fileName);
+        Managers.userLogManager.sendUserLog("Movie created at " + filename);
 
     }
 

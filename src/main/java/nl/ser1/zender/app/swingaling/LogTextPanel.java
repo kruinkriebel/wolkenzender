@@ -35,8 +35,8 @@ public class LogTextPanel extends JPanel implements UserLogReceiver {
     @Override
     public void receive(String log) {
         int lineCount = logArea.getLineCount();
-        if (lineCount >= 1000) {
-            logArea.setText("<screen logging reset>");
+        if (lineCount >= 500) {
+            logArea.setText("<screen logging reset>\n");
         }
         logArea.append(StringUtils.rightPad(lineCount+"",3) + " " + log);
     }

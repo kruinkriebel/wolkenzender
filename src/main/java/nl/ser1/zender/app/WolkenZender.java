@@ -1,5 +1,6 @@
 package nl.ser1.zender.app;
 
+import nl.ser1.zender.app.managers.Managers;
 import nl.ser1.zender.app.state.State;
 import nl.ser1.zender.app.swingaling.*;
 import org.slf4j.Logger;
@@ -29,9 +30,8 @@ public class WolkenZender {
     }
 
     private static void initialAppState() {
-        application.getStateManager().toState(State.STOPPED);
-        application.getUserLogManager().sendUserLog("Welcome! Pick an action from the menu");
-        application.getImagesManager().loadBufferFromOutputDirectory();
+        Managers.userLogManager.sendUserLog("Welcome! Pick an action from the menu");
+        Managers.imagesManager.loadBufferFromOutputDirectory();
     }
 
     private static void schwinggg() {
@@ -47,12 +47,11 @@ public class WolkenZender {
 
         headPanel.add(new HeadBlockPanel("Settings", new SettingsArea()));
 
-        StatusTextArea statusTextArea = new StatusTextArea(application.getImagesManager());
+        StatusTextArea statusTextArea = new StatusTextArea();
         headPanel.add(new HeadBlockPanel("State", statusTextArea));
-        application.getStateManager().registerStateListener(statusTextArea);
 
         LogTextPanel logPane = new LogTextPanel();
-        application.getUserLogManager().registerUserLogReceiver(logPane);
+        Managers.userLogManager.registerUserLogReceiver(logPane);
 
         mainPanel.add(logPane);
 
@@ -76,27 +75,18 @@ public class WolkenZender {
     private static JMenuBar createJMenuBar() {
 
         JMenuBar menuBar = new JMenuBar();
-
         JMenu fileMenu = new FileMenu(application);
-
         menuBar.add(fileMenu);
-
-
         return menuBar;
-
-
     }
 
     private static JFrame createJFrame() {
         JFrame frame = new JFrame("Wolkenzender");
-
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-
         frame.setLocationByPlatform(true);
 
         return frame;
     }
-
 
 }
 

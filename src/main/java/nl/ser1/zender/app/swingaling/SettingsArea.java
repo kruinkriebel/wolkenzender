@@ -9,9 +9,13 @@ public class SettingsArea extends HeadBlockTextArea {
 
     public SettingsArea() {
         append("- Capture interval: " + Settings.CAPTURE_INTERVAL_SECONDS + " seconds" + "\n");
-        append("- Capture size: " + Settings.LOGITECH_C920_MAX_CAPTURE_WIDTH + " x " + Settings.LOGITECH_C920_MAX_CAPTURE_HEIGHT +"\n");
+        append("- Capture size: " + Settings.CAPTURE_RESOLUTION.width + " x " + Settings.CAPTURE_RESOLUTION.height + "\n");
         append("- Capture format: " + Settings.CAPTURE_FORMAT_EXTENSION + "\n");
-        append("- Capture window from: " + Settings.CAPTURE_WINDOW_START_TIME + "\n");
-        append("- Capture window to: " + Settings.CAPTURE_WINDOW_END_TIME + "\n");
+        if (Settings.USE_TIMEWINDOW) {
+            append("- Capture window from: " + Settings.CAPTURE_WINDOW_START_TIME + "\n");
+            append("- Capture window to: " + Settings.CAPTURE_WINDOW_END_TIME + "\n");
+        } else {
+            append("- Capture window OFF\n");
+        }
     }
 }
