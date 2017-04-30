@@ -1,5 +1,6 @@
 package nl.ser1.zender.app.images;
 
+import nl.ser1.zender.app.managers.Managers;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -28,7 +29,7 @@ public class ImagesManager {
 
     public ImagesManager() {
         imageEventListeners = new ArrayList<>();
-        newBuffer();
+        loadBufferFromOutputDirectory();
     }
 
     public List<String> getImages() {

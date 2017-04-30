@@ -1,8 +1,7 @@
 package nl.ser1.zender.app.swingaling;
 
-import nl.ser1.zender.app.Application;
+import nl.ser1.zender.app.Tasks;
 import nl.ser1.zender.app.managers.Managers;
-import nl.ser1.zender.app.state.*;
 import nl.ser1.zender.app.state.Action;
 
 import javax.swing.*;
@@ -14,9 +13,9 @@ import java.awt.event.ActionListener;
  */
 public class FileMenu extends JMenu {
 
-    Application application;
+    Tasks application;
 
-    public FileMenu(Application application) {
+    public FileMenu(Tasks application) {
         super("File");
         this.application = application;
         addMenuItems();
@@ -42,7 +41,7 @@ public class FileMenu extends JMenu {
         JMenuItem item = new JMenuItem("Clear buffer") {
             @Override
             public boolean isEnabled() {
-                return actionAllowed(Action.CLEAR_BUFFER) && Managers.imagesManager.isBufferFilled();
+                return actionAllowed(Action.CLEAR_BUFFER) && Managers.IMAGES_MAN.isBufferFilled();
             }
         };
         item.addActionListener(new ActionListener() {
@@ -50,7 +49,7 @@ public class FileMenu extends JMenu {
             @Override
             public void actionPerformed(ActionEvent e) {
                 performAction(Action.CLEAR_BUFFER);
-                Managers.imagesManager.clearBuffer();
+                Managers.IMAGES_MAN.clearBuffer();
             }
         });
         return item;
@@ -62,7 +61,7 @@ public class FileMenu extends JMenu {
         JMenuItem item = new JMenuItem() {
             @Override
             public String getText() {
-                return "State: " + Managers.stateManager.getState();
+                return "State: " + Managers.STATE_MAN.getState();
             }
         };
         item.setFocusable(false);
@@ -74,7 +73,7 @@ public class FileMenu extends JMenu {
         JMenuItem item = new JMenuItem() {
             @Override
             public String getText() {
-                return "Buffer: " + (!Managers.imagesManager.isBufferFilled() ? "EMPTY" : Managers.imagesManager.size() + " PICS");
+                return "Buffer: " + (!Managers.IMAGES_MAN.isBufferFilled() ? "EMPTY" : Managers.IMAGES_MAN.size() + " PICS");
             }
         };
         item.setFocusable(false);
@@ -86,7 +85,7 @@ public class FileMenu extends JMenu {
         JMenuItem item = new JMenuItem("Create movie") {
             @Override
             public boolean isEnabled() {
-                return actionAllowed(Action.START_CREATE_MOVIE) && Managers.imagesManager.isBufferFilled();
+                return actionAllowed(Action.START_CREATE_MOVIE) && Managers.IMAGES_MAN.isBufferFilled();
             }
         };
         item.addActionListener(new ActionListener() {
@@ -128,7 +127,7 @@ public class FileMenu extends JMenu {
 
             @Override
             public String getText() {
-                return (Managers.imagesManager.isBufferFilled() ? "Continue" : "Start") + " taking pictures";
+                return (Managers.IMAGES_MAN.isBufferFilled() ? "Continue" : "Start") + " taking pictures";
             }
         };
         item.addActionListener(new ActionListener() {
@@ -159,11 +158,11 @@ public class FileMenu extends JMenu {
     }
 
     private boolean actionAllowed(Action action) {
-        return Managers.stateManager.actionAllowed(action);
+        return Managers.STATE_MAN.actionAllowed(action);
     }
 
     private void performAction(Action action) {
-        Managers.stateManager.performAction(action);
+        Managers.STATE_MAN.performAction(action);
     }
 
 

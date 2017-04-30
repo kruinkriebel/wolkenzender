@@ -3,7 +3,6 @@ package nl.ser1.zender.tasks;
 import nl.ser1.zender.app.managers.Managers;
 import nl.ser1.zender.app.Settings;
 import nl.ser1.zender.app.state.Action;
-import nl.ser1.zender.app.state.State;
 import nl.ser1.zender.scooped.moviemaker.JpegImagesToMovie;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -26,7 +25,7 @@ public class CreateMovieTask implements Runnable {
     @Override
     public void run() {
 
-        Managers.userLogManager.sendUserLog("Starting movie creation");
+        Managers.USERLOG_MAN.sendUserLog("Starting movie creation");
         String filename = createFilename();
 
         try {
@@ -37,15 +36,15 @@ public class CreateMovieTask implements Runnable {
             if ((oml = imageToMovie.createMediaLocator(filename)) == null) {
                 LOGGER.error("Cannot build media locator from: " + filename);
             }
-            imageToMovie.doIt(Settings.CAPTURE_RESOLUTION.width, Settings.CAPTURE_RESOLUTION.height, 30, new Vector(Managers.imagesManager.getImages()), oml);
+            imageToMovie.doIt(Settings.CAPTURE_RESOLUTION.width, Settings.CAPTURE_RESOLUTION.height, 30, new Vector(Managers.IMAGES_MAN.getImages()), oml);
 
         } catch (MalformedURLException e) {
             LOGGER.error("URL shit", e);
         } finally {
-            Managers.stateManager.performAction(Action.STOP_CREATING_MOVIE);
+            Managers.STATE_MAN.performAction(Action.STOP_CREATING_MOVIE);
         }
 
-        Managers.userLogManager.sendUserLog("Movie created at " + filename);
+        Managers.USERLOG_MAN.sendUserLog("Movie created at " + filename);
 
     }
 

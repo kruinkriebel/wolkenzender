@@ -17,5 +17,7 @@ public class SettingsArea extends HeadBlockTextArea {
         } else {
             append("- Capture window OFF\n");
         }
+        append("- State checks: " + (Settings.CHECK_STATE ? ("Yes, every " + Settings.CHECK_STATE_EVERY_X_SHOTS + " pictures ") : "No") + "\n");
+
     }
 }

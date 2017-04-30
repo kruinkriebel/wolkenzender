@@ -1,7 +1,6 @@
 package nl.ser1.zender.app;
 
 import nl.ser1.zender.app.managers.Managers;
-import nl.ser1.zender.app.state.State;
 import nl.ser1.zender.app.swingaling.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -14,7 +13,7 @@ public class WolkenZender {
     public static final int APPLICATION_WIDTH = 1000;
     private static final Logger LOGGER = LoggerFactory.getLogger(WolkenZender.class);
 
-    private static Application application = new Application();
+    private static Tasks tasks = new Tasks();
 
     public static void main(String[] args) {
         setAppleProperties();
@@ -30,8 +29,7 @@ public class WolkenZender {
     }
 
     private static void initialAppState() {
-        Managers.userLogManager.sendUserLog("Welcome! Pick an action from the menu");
-        Managers.imagesManager.loadBufferFromOutputDirectory();
+        Managers.USERLOG_MAN.sendUserLog("Welcome! Pick an action from the menu");
     }
 
     private static void schwinggg() {
@@ -51,7 +49,7 @@ public class WolkenZender {
         headPanel.add(new HeadBlockPanel("State", statusTextArea));
 
         LogTextPanel logPane = new LogTextPanel();
-        Managers.userLogManager.registerUserLogReceiver(logPane);
+        Managers.USERLOG_MAN.registerUserLogReceiver(logPane);
 
         mainPanel.add(logPane);
 
@@ -69,13 +67,13 @@ public class WolkenZender {
 
     private static void setAppleProperties() {
         System.setProperty("apple.laf.useScreenMenuBar", "true");
-        System.setProperty("com.apple.mrj.application.apple.menu.about.name", "Name");
+        System.setProperty("com.apple.mrj.tasks.apple.menu.about.name", "Name");
     }
 
     private static JMenuBar createJMenuBar() {
 
         JMenuBar menuBar = new JMenuBar();
-        JMenu fileMenu = new FileMenu(application);
+        JMenu fileMenu = new FileMenu(tasks);
         menuBar.add(fileMenu);
         return menuBar;
     }

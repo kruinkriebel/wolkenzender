@@ -14,6 +14,7 @@ import java.awt.*;
 public class LogTextPanel extends JPanel implements UserLogReceiver {
 
     private JTextArea logArea;
+    private JScrollPane scrollPane;
 
     public LogTextPanel() {
         setLayout(new BorderLayout());
@@ -23,7 +24,7 @@ public class LogTextPanel extends JPanel implements UserLogReceiver {
         logArea.setFont(new Font(Font.MONOSPACED, Font.PLAIN, getFont().getSize()));
         logArea.setEditable(false);
 
-        JScrollPane scrollPane = new JScrollPane(logArea);
+        scrollPane = new JScrollPane(logArea);
         add(scrollPane);
     }
 
@@ -34,11 +35,20 @@ public class LogTextPanel extends JPanel implements UserLogReceiver {
 
     @Override
     public void receive(String log) {
+
         int lineCount = logArea.getLineCount();
         if (lineCount >= 500) {
             logArea.setText("<screen logging reset>\n");
         }
+
         logArea.append(StringUtils.rightPad(lineCount+"",3) + " " + log);
+
+        scrollDown();
+    }
+
+    private void scrollDown() {
+        JScrollBar vertical = scrollPane.getVerticalScrollBar();
+        vertical.setValue(vertical.getMaximum());
     }
 
 }
